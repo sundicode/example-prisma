@@ -1,0 +1,58 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum ROLES {
+  USER
+  STAFF
+}
+
+model Users {
+  id        String   @id @default(cuid())
+  username  String
+  email     String   @unique
+  password  String
+  role      ROLES    @default(USER)
+  createdAt DateTime @default(now())
+  updateAt  DateTime @updatedAt
+
+  reciversMessages Messages[] @relation("reciever")
+  sendersMessages  Messages[] @relation("senders")
+}
+
+// now we try to create relation ships
+// one to many realtionship
+model Messages {
+  id      String @id @default(cuid())
+  senders Users  @relation(name: "senders", fields: [sendersId], references: [id])
+
+  reciever       Users         @relation(name: "reciever", fields: [recieversId], references: [id])
+  createdAt      DateTime      @default(now())
+  updateAt       DateTime      @updatedAt
+  conversation   Conversation? @relation(fields: [conversationId], references: [id])
+  conversationId String?
+  sendersId      String
+  recieversId    String
+
+  @@unique([sendersId, recieversId])
+}
+
+model Conversation {
+  id String @id @default(cuid())
+
+  messages Messages[]
+
+  createdAt DateTime @default(now())
+  updateAt  DateTime @updatedAt
+}
